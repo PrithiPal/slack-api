@@ -39,7 +39,7 @@ def get_channel_id(channel_name,is_public):
     else : 
         return current_channel_id[0]
     
-## untested 
+
 def get_channel_members_ids(channel_name,is_public):
     
     channel_id = get_channel_id(channel_name,is_public)
@@ -47,13 +47,13 @@ def get_channel_members_ids(channel_name,is_public):
     #print(channel_members)
     return channel_members
     
-## untested
+
 def get_member_info(member_id) : 
-        
-    USER_VARIABLES=["name"]
     
     presence_info = client.users_getPresence(user=member_id)
     user_identity = client.users_info(user=member_id)
+
+    print(user_identity)
    
     for user in user_identity : 
         user_team_id = user["user"]["team_id"]
@@ -61,7 +61,7 @@ def get_member_info(member_id) :
     
     return {"team_id":user_team_id,"real_name":user_real_name}
     
-## untested
+
 def get_channel_info(channel_name,is_public) : 
 
     channel_id = get_channel_id(channel_name,is_public=is_public)
@@ -72,11 +72,53 @@ def get_channel_info(channel_name,is_public) :
     team_id = public_channel_info["channel"]["shared_team_ids"]
     return {'creator':chan_creator,'team_id':team_id,'members':channel_member_ids}
 
+def channel_message_analysis(channel_name,is_public) : 
+
+    chan_id = get_channel_id(channel_name,is_public=is_public)
+    user_history = {}
+    PAGINATION_LIMIT=200
+    chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
+    #print(chan_history.__dict__.["data"].keys())
+    #print(chan_history)
+    if "response_metadata" in chan_history.__dict__["data"].keys() : 
+        #print("Second")
+        cursor = chan_history["response_metadata"]["next_cursor"]
+        i = 0 
+        while(True) : 
+            chan_message = chan_history["messages"]
+            for message in chan_message : 
+                message_user = message["user"] 
+                if message_user not in user_history : 
+                    user_history[message_user]=1
+                else:
+                    user_history[message_user]+=1
+
+            if "response_metadata" not in chan_history.__dict__["data"].keys() : 
+                break
+            else:
+                cursor = chan_history["response_metadata"]["next_cursor"]
+
+            chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT,cursor=cursor)
+            i+=1
+            print("{} {}".format(i,cursor))
+    else:
+        #print("First")
+        chan_message = chan_history["messages"]
+        for message in chan_message : 
+            message_user = message["user"] 
+            if message_user not in user_history : 
+                user_history[message_user]=1
+            else:
+                user_history[message_user]+=1 
+
+    return user_history
+
 
 def main():
 
     #val=get_channel_info("lawrence_park_ci_team",is_public=True)
-    val = get_member_info("UMRV5AK16")
+    #val = get_member_info("UMRV5AK16")
+    val = channel_message_analysis("general",is_public=True)
     print(val)
     return 0
     
