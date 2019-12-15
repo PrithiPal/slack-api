@@ -1,4 +1,5 @@
 import unittest
+import time 
 import basic as api
 import os 
 import slack 
@@ -6,6 +7,17 @@ from slack import WebClient as slack_client
 
 MY_STEMBOT_TOKEN=os.getenv("STEMBOT_TOKEN")
 client = slack_client(token=MY_STEMBOT_TOKEN)
+
+def measure_time(func):
+    def wrapper(*args,**kwargs):
+        start = time.time()
+        returnval = func(*args,**kwargs)
+        end = time.time() 
+        print("Time taken by {} is {}".format(func.__name__,end-start))
+        return returnval
+    return wrapper
+
+
 
 class TestSlackFunctions(unittest.TestCase) : 
 
@@ -33,6 +45,7 @@ class TestSlackFunctions(unittest.TestCase) :
     #def setUp(self) : 
     #    print("TEST PER FUNCTION SETUP .. ")
 
+    @measure_time
     def test_channel_exists(self) : 
         print("-- > test_channel_exists()")
         
@@ -51,7 +64,7 @@ class TestSlackFunctions(unittest.TestCase) :
         #chan_id = api.get_channel_id(chan_name,is_public=is_public)
         #print(chan_id)
 
-
+    @measure_time
     def test_get_channel_id(self) : 
         print("-- > test_get_channel_id()")
         ind=0
@@ -62,7 +75,7 @@ class TestSlackFunctions(unittest.TestCase) :
 
         self.assertEqual(api.get_channel_id(self.private_chan_name,is_public=False),self.private_chan_id)
 
-   
+    @measure_time
     def test_get_channel_members_ids(self) : 
         print("-- > test_get_channel_members_ids()")
         
@@ -75,6 +88,7 @@ class TestSlackFunctions(unittest.TestCase) :
         self.assertEqual(api.get_channel_members_ids(self.public_chan_name,is_public=True),sol1)
         self.assertEqual(api.get_channel_members_ids(self.private_chan_name,is_public=False),sol2)
 
+    @measure_time
     def test_get_member_info(self) : 
         print("-- > test_get_member_info()")
         #print(api.get_member_info(self.user1))

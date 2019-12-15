@@ -53,7 +53,7 @@ def get_member_info(member_id) :
     presence_info = client.users_getPresence(user=member_id)
     user_identity = client.users_info(user=member_id)
 
-    print(user_identity)
+    #print(user_identity)
    
     for user in user_identity : 
         user_team_id = user["user"]["team_id"]
@@ -80,6 +80,8 @@ def channel_message_analysis(channel_name,is_public) :
     chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
     #print(chan_history.__dict__.["data"].keys())
     #print(chan_history)
+    
+    
     if "response_metadata" in chan_history.__dict__["data"].keys() : 
         #print("Second")
         cursor = chan_history["response_metadata"]["next_cursor"]
@@ -111,7 +113,13 @@ def channel_message_analysis(channel_name,is_public) :
             else:
                 user_history[message_user]+=1 
 
+
+    names = list(map(lambda x:get_member_info(x)["real_name"],user_history))
+    print(names)
+
     return user_history
+
+
 
 
 def main():
@@ -119,7 +127,6 @@ def main():
     #val=get_channel_info("lawrence_park_ci_team",is_public=True)
     #val = get_member_info("UMRV5AK16")
     val = channel_message_analysis("general",is_public=True)
-    print(val)
     return 0
     
 
