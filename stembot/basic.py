@@ -6,7 +6,7 @@ from slack import WebClient as slack_client
 
 MENTOR_CHANNEL_NAME="mentors"
 MY_STEMBOT_TOKEN=os.getenv("STEMBOT_TOKEN")
-CHANNEL_NUM = 150
+CHANNEL_NUM = 500
 
 client = slack_client(token=MY_STEMBOT_TOKEN)
 
@@ -31,10 +31,10 @@ def get_channel_id(channel_name,is_public):
     current_channel_id = [i["id"] for i in channel if i["name"]==channel_name]
     
     if(len(current_channel_id)>1) : 
-        print("Multiple channels returned. Ignoring..")
+        print("--> get_channel_id : Multiple channels returned\nargs={},{} gnoring..".format(channel_name,is_public))
         return ""
     elif current_channel_id==[]:
-        print("Empty channel list. Ignoring..")
+        print("--> get_channel_id : Multiple channels returned\nargs={},{} gnoring..".format(channel_name,is_public))
         return ""
     else : 
         return current_channel_id[0]
@@ -73,52 +73,68 @@ def get_channel_info(channel_name,is_public) :
     return {'creator':chan_creator,'team_id':team_id,'members':channel_member_ids}
 
 def channel_message_analysis(channel_name,is_public) : 
+    print("chan : {}".format(channel_name))
+    try : 
+        chan_id = get_channel_id(channel_name,is_public=is_public)
+        user_history = {}
+        PAGINATION_LIMIT=200
+        chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
+        #print(chan_history.__dict__.["data"].keys())
+        #print(chan_history)
+        
+        
+        if "response_metadata" in chan_history.__dict__["data"].keys() : 
+            #print("Second")
+            cursor = chan_history["response_metadata"]["next_cursor"]
+            i = 0 
+            while(True) : 
+                chan_message = chan_history["messages"]
+                for message in chan_message : 
+                    message_user = message["user"] 
+                    if message_user not in user_history : 
+                        user_history[message_user]=1
+                    else:
+                        user_history[message_user]+=1
 
-    chan_id = get_channel_id(channel_name,is_public=is_public)
-    user_history = {}
-    PAGINATION_LIMIT=200
-    chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
-    #print(chan_history.__dict__.["data"].keys())
-    #print(chan_history)
-    
-    
-    if "response_metadata" in chan_history.__dict__["data"].keys() : 
-        #print("Second")
-        cursor = chan_history["response_metadata"]["next_cursor"]
-        i = 0 
-        while(True) : 
+                if "response_metadata" not in chan_history.__dict__["data"].keys() : 
+                    break
+                else:
+                    cursor = chan_history["response_metadata"]["next_cursor"]
+
+                chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT,cursor=cursor)
+                i+=1
+                print("{} {}".format(i,cursor))
+        else:
+            #print("First")
             chan_message = chan_history["messages"]
             for message in chan_message : 
+                #print(message)
                 message_user = message["user"] 
                 if message_user not in user_history : 
                     user_history[message_user]=1
                 else:
-                    user_history[message_user]+=1
-
-            if "response_metadata" not in chan_history.__dict__["data"].keys() : 
-                break
-            else:
-                cursor = chan_history["response_metadata"]["next_cursor"]
-
-            chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT,cursor=cursor)
-            i+=1
-            print("{} {}".format(i,cursor))
-    else:
-        #print("First")
-        chan_message = chan_history["messages"]
-        for message in chan_message : 
-            message_user = message["user"] 
-            if message_user not in user_history : 
-                user_history[message_user]=1
-            else:
-                user_history[message_user]+=1 
+                    user_history[message_user]+=1 
 
 
-    names = list(map(lambda x:get_member_info(x)["real_name"],user_history))
-    print(names)
+        names = list(map(lambda x:get_member_info(x)["real_name"],user_history))
+        returnval = list(zip(names,user_history.values()))
+        return returnval
 
-    return user_history
+    except Exception as e : 
+        print("--> channel_message_analysis : Error : {} . Exiting..".format(e))
+        return {}
 
+
+def generate_num_messages_all() : 
+    
+   all_public_channels =  [i["name"] for i in client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]]
+   all_private_channels = [i["name"] for i in client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]] 
+
+   public_chan_data = [channel_message_analysis(c,is_public=True) for c in all_public_channels]
+   private_chan_data = [channel_message_analysis(c,is_public=False) for c in all_private_channels]
+   
+
+   return {**public_chan_data,**private_chan_data}
 
 
 
@@ -126,7 +142,9 @@ def main():
 
     #val=get_channel_info("lawrence_park_ci_team",is_public=True)
     #val = get_member_info("UMRV5AK16")
-    val = channel_message_analysis("general",is_public=True)
+    #val = channel_message_analysis("fridge",is_public=False)
+    val = generate_num_messages_all()
+    print(val)
     return 0
     
 
