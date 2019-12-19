@@ -94,8 +94,15 @@ class TestSlackFunctions(unittest.TestCase) :
         #print(api.get_member_info(self.user1))
         sol = {'team_id': 'TMU55JAQN', 'real_name': 'BDC Admin'}
         self.assertEqual(api.get_member_info(self.user1),sol)
-       
 
+    @measure_time 
+    def test_channel_message_analysis(self) : 
+        print("-- > test_channel_message_analysis()")
+        SAMPLE_CHAN_NAME="abbey_park"
+        IS_PUBLIC=True
+        response = api.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
+        print(response)
+       
 
 
 if __name__ == "__main__" : 

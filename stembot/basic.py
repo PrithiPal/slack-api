@@ -49,12 +49,28 @@ def recored_function_calls(func) :
 
 client = slack_client(token=MY_STEMBOT_TOKEN)
 
+def add_dicts(d1,d2) : 
+
+    d3={}
+    k1 = d1.keys()
+    k2  = d2.keys()
+
+    all_keys=set(k1).union(k2)
+    for k in all_keys : 
+        sum=0
+        if k in k1 : 
+            sum+=d1[k]
+        if k in k2 : 
+            sum+=d2[k]
+        d3[k]=sum
+
+    return d3 
 @recored_function_calls
 def post_message_to_slack(channel_name,text_to_post) : 
     response = client.chat_postMessage(
             channel=channel_name,
             text=text_to_post
-    )
+    ) 
     assert response["ok"]
     assert response["message"]["text"] == "Hello world!"
 
@@ -90,13 +106,13 @@ def get_channel_id(channel_name : str,is_public : bool) -> int:
 def get_channel_members_ids(channel_name : str , is_public : bool ) -> List[int] :
     global NUM_REQUESTS
     
-    t1 = time.time()
+    #t1 = time.time()
     channel_id = get_channel_id(channel_name,is_public)
-    t2 = time.time()
+    #t2 = time.time()
     channel_members = client.conversations_members(channel=channel_id,limit=MAX_CHANNEL_NUM)["members"]
-    t3 = time.time()
+    #t3 = time.time()
 
-    print("t1 = {}, t2 = {}".format(t2-t1,t3-t2))
+    #print("t1 = {}, t2 = {}".format(t2-t1,t3-t2))
     NUM_REQUESTS+=1
     #print(channel_members)
     return channel_members
@@ -187,7 +203,8 @@ def channel_message_analysis(channel_name,is_public) :
 
     # most common excepts: 
     # User Not Found
-    # Rate Limit Exceeded : 
+    # Rate Limit Exceeded  
+    # real_name 
     except Exception as e : 
         print("--> channel_message_analysis : Error : {} . Exiting..".format(e))
         x = e.args
@@ -215,7 +232,7 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
         output = channel_message_analysis(c,is_public=False)
         
         if 'error' not in output : 
-            all_data = {**all_data,**output}
+            all_data = add_dicts(all_data,output)
         else:
             missed_channels.append((c,False))
         
@@ -225,7 +242,7 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
         output = channel_message_analysis(c,is_public=True)
         
         if 'error' not in output : 
-            all_data = {**all_data,**output}
+            all_data = add_dicts(all_data,output)
         else:
             missed_channels.append((c,True))
 
@@ -240,7 +257,10 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
         output = channel_message_analysis(chan_name,is_public=is_public)
         if output == {}:
             print("{} unprocessed ".format(chan_name))
-        all_data={**all_data,**output}
+        all_data = add_dicts(all_data,output)
+
+    ## ADD MORE REQUIRED INFORMATION OVER HERE INTO THE general_num_messages_all.csv
+
 
     if to_pickle : 
         pickle.dump(all_data,open("generate_num_messages_all.p","wb"))
@@ -255,6 +275,10 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
 
 
+
+
+
+
 def main():
 
     #val=get_channel_info("lawrence_park_ci_team",is_public=True)
@@ -262,6 +286,10 @@ def main():
     #val = channel_message_analysis("fridge",is_public=False)
     val = generate_num_messages_all()
     print(val)
+
+    #df=pd.read_csv('general_num_messages_all.csv')
+    #names = df['name'].tolist()
+    
     return 0
     
 
