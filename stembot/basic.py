@@ -65,6 +65,7 @@ def add_dicts(d1,d2) :
         d3[k]=sum
 
     return d3 
+
 @recored_function_calls
 def post_message_to_slack(channel_name,text_to_post) : 
     response = client.chat_postMessage(
@@ -218,7 +219,7 @@ def channel_message_analysis(channel_name,is_public) :
                 ## Slack Api rate limit info can be found here : https://api.slack.com/docs/rate-limits
                 print('--> Total requests made = {}'.format(NUM_REQUESTS))
                 return {'error':'rate_limited'}
-        return {'error':e.args[0]}
+        return {}
 
 @recored_function_calls
 def generate_num_messages_all(to_pickle=False,to_csv=True) : 
@@ -261,6 +262,9 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
     ## ADD MORE REQUIRED INFORMATION OVER HERE INTO THE general_num_messages_all.csv
 
+    team_ids = list(map(lambda x:get_member_info(x)["team_id"],all_data.keys()))
+    print(team_ids)
+
 
     if to_pickle : 
         pickle.dump(all_data,open("generate_num_messages_all.p","wb"))
@@ -272,11 +276,6 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
     
     return all_data 
-
-
-
-
-
 
 
 def main():

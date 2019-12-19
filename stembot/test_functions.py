@@ -3,6 +3,8 @@ import time
 import basic as api
 import os 
 import slack 
+import numpy as np
+import pandas as pd 
 from slack import WebClient as slack_client
 
 MY_STEMBOT_TOKEN=os.getenv("STEMBOT_TOKEN")
@@ -41,6 +43,7 @@ class TestSlackFunctions(unittest.TestCase) :
         self.user1 = "UMRV5AK16" 
         self.user2 = "UPB0D7892"
         self.user3 = "UQ99FQWRJ"
+        pass
 
     #def setUp(self) : 
     #    print("TEST PER FUNCTION SETUP .. ")
@@ -60,6 +63,7 @@ class TestSlackFunctions(unittest.TestCase) :
         #print("is_present = {}".format(is_present))
 
         self.assertTrue(is_present)
+        pass
         
         #chan_id = api.get_channel_id(chan_name,is_public=is_public)
         #print(chan_id)
@@ -74,6 +78,7 @@ class TestSlackFunctions(unittest.TestCase) :
         self.assertEqual(api.get_channel_id(self.public_chan_name,is_public=True),self.public_chan_id)
 
         self.assertEqual(api.get_channel_id(self.private_chan_name,is_public=False),self.private_chan_id)
+        pass
 
     @measure_time
     def test_get_channel_members_ids(self) : 
@@ -87,6 +92,7 @@ class TestSlackFunctions(unittest.TestCase) :
         
         self.assertEqual(api.get_channel_members_ids(self.public_chan_name,is_public=True),sol1)
         self.assertEqual(api.get_channel_members_ids(self.private_chan_name,is_public=False),sol2)
+        pass
 
     @measure_time
     def test_get_member_info(self) : 
@@ -94,6 +100,7 @@ class TestSlackFunctions(unittest.TestCase) :
         #print(api.get_member_info(self.user1))
         sol = {'team_id': 'TMU55JAQN', 'real_name': 'BDC Admin'}
         self.assertEqual(api.get_member_info(self.user1),sol)
+        pass
 
     @measure_time 
     def test_channel_message_analysis(self) : 
@@ -102,8 +109,26 @@ class TestSlackFunctions(unittest.TestCase) :
         IS_PUBLIC=True
         response = api.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
         print(response)
-       
+        pass
 
+    @measure_time
+    def test_general_num_messages_all(self) : 
+        CSV_FILE="general_num_message_all.csv"
+        df = pd.read_csv(CSV_FILE)
+        print(df)
 
+def suite() : 
+    suite = unittest.TestSuite()
+    #suite.addTest(TestSlackFunctions('test_channel_exists'))
+    #suite.addTest(TestSlackFunctions('test_get_channel_id'))
+    #suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
+    #suite.addTest(TestSlackFunctions('test_get_member_info'))
+    #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
+    suite.addTest(TestSlackFunctions('test_general_num_messages_all'))
+    return suite
+    
+    
 if __name__ == "__main__" : 
-    unittest.main()
+    #unittest.main()
+    runner = unittest.TextTestRunner()
+    runner.run(suite())
