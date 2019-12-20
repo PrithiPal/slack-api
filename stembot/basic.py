@@ -85,16 +85,9 @@ def get_channel_id(channel_name : str,is_public : bool) -> int:
         channel = PUBLIC_CHANNELS
     else:
         channel = PRIVATE_CHANNELS
-        
-    #print(channel)
-    #t2 = time.time()
-    
+
     current_channel_id = [i["id"] for i in channel if i["name"]==channel_name]
-    
-    #t3=time.time()
-    
-    #print("first = {}, second = {}".format(t2-t1,t3-t2))
-    #print(current_channel_id)
+
     if(len(current_channel_id)>1) : 
         print("--> get_channel_id : Multiple channels returned\nargs={},{} Ignoring..".format(channel_name,is_public))
         return ""
@@ -108,15 +101,8 @@ def get_channel_id(channel_name : str,is_public : bool) -> int:
 @recored_function_calls
 def get_channel_members_ids(channel_id : str , is_public : bool ) -> List[int] :
     global NUM_REQUESTS
-    #t1 = time.time()
-    #channel_id = get_channel_id(channel_name,is_public)
-    #t2 = time.time()
     channel_members = client.conversations_members(channel=channel_id,limit=MAX_CHANNEL_NUM)["members"]
-    #t3 = time.time()
-
-    #print("t1 = {}, t2 = {}".format(t2-t1,t3-t2))
     NUM_REQUESTS+=1
-    #print(channel_members)
     return channel_members
     
 ## test type checking
@@ -128,7 +114,6 @@ def get_member_info(member_id : str ) -> Dict[str,str] :
     user_identity = client.users_info(user=member_id)
     NUM_REQUESTS+=2
 
-    #print(user_identity)
     try : 
         for user in user_identity : 
             user_real_name=""
@@ -139,7 +124,6 @@ def get_member_info(member_id : str ) -> Dict[str,str] :
                 user_real_name = user["user"]["name"]
     except : 
         print("[err] : real_name not a key. skipping... ")
-        #return {"team_id":"ERROR","real_name":"ERROR"}
     
     return {"real_name":user_real_name}
     
@@ -147,11 +131,11 @@ def get_member_info(member_id : str ) -> Dict[str,str] :
 def get_channel_info(channel_id : str,is_public : bool) -> Dict[str,str] : 
     global NUM_REQUESTS
     
-    #channel_id = get_channel_id(channel_name,is_public=is_public)
+
     public_channel_info = client.conversations_info(channel=channel_id)
     NUM_REQUESTS+=1
     channel_member_ids = get_channel_members_ids(channel_id,is_public=is_public)
-    #print(public_channel_info)
+
     chan_creator = public_channel_info["channel"]["creator"]
     team_id = public_channel_info["channel"]["shared_team_ids"]
     return {'creator':chan_creator,'members':channel_member_ids,'channel_id':channel_id}
@@ -167,10 +151,8 @@ def channel_message_analysis(channel_name,is_public) :
         user_history = {}
         chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
         NUM_REQUESTS+=1
-        #print(chan_history.__dict__.["data"].keys())
-        #print(chan_history)
-        
-        
+
+            
         if "response_metadata" in chan_history.__dict__["data"].keys() : 
             #print("Second")
             cursor = chan_history["response_metadata"]["next_cursor"]
@@ -283,6 +265,7 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
     df = pd.DataFrame({'user_id':list(all_data.keys()),'num_messages':list(all_data.values())})
     df['name'] = df.apply(lambda x:get_member_info(x["user_id"])["real_name"],axis=1)
+    df['team']
     
 
 
@@ -300,16 +283,9 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
 def main():
 
-
-
-    #val=get_channel_info("lawrence_park_ci_team",is_public=True)
-    #val = get_member_info("UMRV5AK16")
-    #val = channel_message_analysis("fridge",is_public=False)
     val = generate_num_messages_all()
     print(val)
 
-    #df=pd.read_csv('general_num_messages_all.csv')
-    #names = df['name'].tolist()
     
     return 0
     
