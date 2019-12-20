@@ -127,15 +127,23 @@ class TestSlackFunctions(unittest.TestCase) :
         response = api.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
         print(response)
         pass
+    
+    @measure_time
+    def test_get_channel_members_df(self) : 
+
+        val = api.get_channel_members_df()
+        print(val)
+
 
 
 def suite() : 
     suite = unittest.TestSuite()
     #suite.addTest(TestSlackFunctions('test_channel_exists'))
-    suite.addTest(TestSlackFunctions('test_get_channel_id'))
-    suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
-    suite.addTest(TestSlackFunctions('test_get_member_info'))
+    #suite.addTest(TestSlackFunctions('test_get_channel_id'))
+    #suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
+    #suite.addTest(TestSlackFunctions('test_get_member_info'))
     #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
+    suite.addTest(TestSlackFunctions('test_get_channel_members_df'))
     return suite
     
     
