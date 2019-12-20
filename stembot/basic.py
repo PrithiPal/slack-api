@@ -19,6 +19,7 @@ NUM_REQUESTS = 0
 RATE_LIMIT_TIME_WAIT = 120
 MAX_CHANNEL_NUM=100
 NUM_FUNC_CALLS=0
+PAGINATION_LIMIT=200
 
 client = slack_client(token=MY_STEMBOT_TOKEN)
 
@@ -93,22 +94,22 @@ def get_channel_id(channel_name : str,is_public : bool) -> int:
     #t3=time.time()
     
     #print("first = {}, second = {}".format(t2-t1,t3-t2))
+    #print(current_channel_id)
     if(len(current_channel_id)>1) : 
-        print("--> get_channel_id : Multiple channels returned\nargs={},{} gnoring..".format(channel_name,is_public))
+        print("--> get_channel_id : Multiple channels returned\nargs={},{} Ignoring..".format(channel_name,is_public))
         return ""
     elif current_channel_id==[]:
-        print("--> get_channel_id : Multiple channels returned\nargs={},{} gnoring..".format(channel_name,is_public))
+        print("--> get_channel_id : Channel {} , {} not found. ".format(channel_name,is_public))
         return ""
     else : 
         return current_channel_id[0]
     
 ## test type checking
 @recored_function_calls
-def get_channel_members_ids(channel_name : str , is_public : bool ) -> List[int] :
+def get_channel_members_ids(channel_id : str , is_public : bool ) -> List[int] :
     global NUM_REQUESTS
-    
     #t1 = time.time()
-    channel_id = get_channel_id(channel_name,is_public)
+    #channel_id = get_channel_id(channel_name,is_public)
     #t2 = time.time()
     channel_members = client.conversations_members(channel=channel_id,limit=MAX_CHANNEL_NUM)["members"]
     #t3 = time.time()
@@ -128,25 +129,32 @@ def get_member_info(member_id : str ) -> Dict[str,str] :
     NUM_REQUESTS+=2
 
     #print(user_identity)
-   
-    for user in user_identity : 
-        user_team_id = user["user"]["team_id"]
-        user_real_name = user["user"]["real_name"]
+    try : 
+        for user in user_identity : 
+            user_real_name=""
+            user_team_id = user["user"]["team_id"]
+            if "real_name" in user["user"] : 
+                user_real_name = user["user"]["real_name"]
+            else:
+                user_real_name = user["user"]["name"]
+    except : 
+        print("[err] : real_name not a key. skipping... ")
+        #return {"team_id":"ERROR","real_name":"ERROR"}
     
-    return {"team_id":user_team_id,"real_name":user_real_name}
+    return {"real_name":user_real_name}
     
 ## add type checking and test type checking
-def get_channel_info(channel_name : str,is_public : bool) -> Dict[str,str] : 
+def get_channel_info(channel_id : str,is_public : bool) -> Dict[str,str] : 
     global NUM_REQUESTS
     
-    channel_id = get_channel_id(channel_name,is_public=is_public)
+    #channel_id = get_channel_id(channel_name,is_public=is_public)
     public_channel_info = client.conversations_info(channel=channel_id)
     NUM_REQUESTS+=1
-    channel_member_ids = get_channel_members_ids(channel_name,is_public=is_public)
+    channel_member_ids = get_channel_members_ids(channel_id,is_public=is_public)
     #print(public_channel_info)
     chan_creator = public_channel_info["channel"]["creator"]
     team_id = public_channel_info["channel"]["shared_team_ids"]
-    return {'creator':chan_creator,'team_id':team_id,'members':channel_member_ids}
+    return {'creator':chan_creator,'members':channel_member_ids,'channel_id':channel_id}
 
 ## add type checking and test type checking
 @recored_function_calls
@@ -157,7 +165,6 @@ def channel_message_analysis(channel_name,is_public) :
     try : 
         chan_id = get_channel_id(channel_name,is_public=is_public)
         user_history = {}
-        PAGINATION_LIMIT=200
         chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
         NUM_REQUESTS+=1
         #print(chan_history.__dict__.["data"].keys())
@@ -171,11 +178,14 @@ def channel_message_analysis(channel_name,is_public) :
             while(True) : 
                 chan_message = chan_history["messages"]
                 for message in chan_message : 
-                    message_user = message["user"] 
-                    if message_user not in user_history : 
-                        user_history[message_user]=1
+                    if "user" in message : 
+                        message_user = message["user"] 
+                        if message_user not in user_history : 
+                            user_history[message_user]=1
+                        else:
+                            user_history[message_user]+=1
                     else:
-                        user_history[message_user]+=1
+                        print("[err] : User: not found, skipping..")
 
                 if "response_metadata" not in chan_history.__dict__["data"].keys() : 
                     break
@@ -190,17 +200,17 @@ def channel_message_analysis(channel_name,is_public) :
             #print("First")
             chan_message = chan_history["messages"]
             for message in chan_message : 
-                #print(message)
-                message_user = message["user"] 
-                if message_user not in user_history : 
-                    user_history[message_user]=1
+                if "user" in message : 
+                    message_user = message["user"] 
+                    if message_user not in user_history : 
+                        user_history[message_user]=1
+                    else:
+                        user_history[message_user]+=1
                 else:
-                    user_history[message_user]+=1 
+                    print("[err] : User: not found, skipping..")
 
 
-        names = list(map(lambda x:get_member_info(x)["real_name"],user_history))
-        returnval = list(zip(names,user_history.values()))
-        return dict(returnval)
+        return user_history
 
     # most common excepts: 
     # User Not Found
@@ -219,51 +229,61 @@ def channel_message_analysis(channel_name,is_public) :
                 ## Slack Api rate limit info can be found here : https://api.slack.com/docs/rate-limits
                 print('--> Total requests made = {}'.format(NUM_REQUESTS))
                 return {'error':'rate_limited'}
+            if 'real_name' in err : 
+                return {'error':'real_name'}
+
         return {}
 
 @recored_function_calls
 def generate_num_messages_all(to_pickle=False,to_csv=True) : 
     
-    all_private_channels = [i["name"] for i in PRIVATE_CHANNELS] 
-
+    DO_PUBLIC=False
+    DO_PRIVATE=True
     all_data = {}
     missed_channels = []
-    
-    for c in all_private_channels : 
-        output = channel_message_analysis(c,is_public=False)
-        
-        if 'error' not in output : 
-            all_data = add_dicts(all_data,output)
-        else:
-            missed_channels.append((c,False))
-        
-    all_public_channels =  [i["name"] for i in PUBLIC_CHANNELS]
-    
-    for c in all_public_channels : 
-        output = channel_message_analysis(c,is_public=True)
-        
-        if 'error' not in output : 
-            all_data = add_dicts(all_data,output)
-        else:
-            missed_channels.append((c,True))
 
+    if DO_PRIVATE : 
 
-    print("--> Waiting ({}s) and starting Missing Channels processing ".format(RATE_LIMIT_TIME_WAIT))
+        all_private_channels = [i["name"] for i in PRIVATE_CHANNELS] 
+        for c in all_private_channels : 
+            output = channel_message_analysis(c,is_public=False)
+            
+            if 'error' not in output : 
+                all_data = add_dicts(all_data,output)
+            else:
+                missed_channels.append((c,False))
+        
+    if DO_PUBLIC : 
+        all_public_channels =  [i["name"] for i in PUBLIC_CHANNELS]
+        
+        for c in all_public_channels : 
+            output = channel_message_analysis(c,is_public=True)
+            
+            if 'error' not in output : 
+                all_data = add_dicts(all_data,output)
+            else:
+                missed_channels.append((c,True))
     
-    time.sleep(RATE_LIMIT_TIME_WAIT)
+    #print("missed_channels={}".format(missed_channels))
     
-    for c in missed_channels : 
-        chan_name = c[0]
-        is_public = c[1]
-        output = channel_message_analysis(chan_name,is_public=is_public)
-        if output == {}:
-            print("{} unprocessed ".format(chan_name))
-        all_data = add_dicts(all_data,output)
+    if missed_channels !=[] : 
+        print("--> Waiting ({}s) and starting Missing Channels processing ".format(RATE_LIMIT_TIME_WAIT))
+        
+        time.sleep(RATE_LIMIT_TIME_WAIT)
+        for c in missed_channels : 
+            chan_name = c[0]
+            is_public = c[1]
+            output = channel_message_analysis(chan_name,is_public=is_public)
+            if output == {}:
+                print("{} unprocessed ".format(chan_name))
+            else : 
+                all_data = add_dicts(all_data,output)
 
     ## ADD MORE REQUIRED INFORMATION OVER HERE INTO THE general_num_messages_all.csv
 
-    team_ids = list(map(lambda x:get_member_info(x)["team_id"],all_data.keys()))
-    print(team_ids)
+    df = pd.DataFrame({'user_id':list(all_data.keys()),'num_messages':list(all_data.values())})
+    df['name'] = df.apply(lambda x:get_member_info(x["user_id"])["real_name"],axis=1)
+    
 
 
     if to_pickle : 
@@ -279,6 +299,8 @@ def generate_num_messages_all(to_pickle=False,to_csv=True) :
 
 
 def main():
+
+
 
     #val=get_channel_info("lawrence_park_ci_team",is_public=True)
     #val = get_member_info("UMRV5AK16")

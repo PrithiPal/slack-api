@@ -43,6 +43,8 @@ class TestSlackFunctions(unittest.TestCase) :
         self.user1 = "UMRV5AK16" 
         self.user2 = "UPB0D7892"
         self.user3 = "UQ99FQWRJ"
+
+
         pass
 
     #def setUp(self) : 
@@ -90,41 +92,50 @@ class TestSlackFunctions(unittest.TestCase) :
         sol1=['UMRV5AK16', 'UPCDVB3DX', 'UPKS6TRQ8', 'UPUGK9M8D', 'UQ0S162TH', 'UQ30NAU8J', 'UQ99FQWRJ', 'UQBE4GPA5', 'UQBVABEA2', 'UQC6DRSTZ', 'UQKBT6H16', 'UQKC9EBT7']
         sol2=['UMRV5AK16', 'UP5BWTWGZ', 'UPB0D7892', 'UPBEANB37', 'UPBQHEZCG', 'UPN3DUTRC']
         
-        self.assertEqual(api.get_channel_members_ids(self.public_chan_name,is_public=True),sol1)
-        self.assertEqual(api.get_channel_members_ids(self.private_chan_name,is_public=False),sol2)
+        self.assertEqual(api.get_channel_members_ids(self.public_chan_id,is_public=True),sol1)
+        self.assertEqual(api.get_channel_members_ids(self.private_chan_id,is_public=False),sol2)
         pass
 
     @measure_time
     def test_get_member_info(self) : 
         print("-- > test_get_member_info()")
-        #print(api.get_member_info(self.user1))
-        sol = {'team_id': 'TMU55JAQN', 'real_name': 'BDC Admin'}
-        self.assertEqual(api.get_member_info(self.user1),sol)
+        val = api.get_member_info(self.user1)
+        sol = {'real_name': 'BDC Admin'}
+        self.assertEqual(val,sol)
+
         pass
 
     @measure_time 
     def test_channel_message_analysis(self) : 
         print("-- > test_channel_message_analysis()")
-        SAMPLE_CHAN_NAME="abbey_park"
+        SAMPLE_CHAN_NAME="earlhaig-bdc1"
         IS_PUBLIC=True
+        missed_channels=[('4guyswhoeatpie', False), ('stembot_test', False)]
+        all_data={}
+        for c in missed_channels : 
+            chan_name = c[0]
+            is_public = c[1]
+            output = api.channel_message_analysis(chan_name,is_public=is_public)
+            if output == {}:
+                print("{} unprocessed ".format(chan_name))
+            else : 
+                try : 
+                    all_data = api.add_dicts(all_data,output)
+                except Exception as err : 
+                    print('err : {}',err.args)
+        
         response = api.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
         print(response)
         pass
 
-    @measure_time
-    def test_general_num_messages_all(self) : 
-        CSV_FILE="general_num_message_all.csv"
-        df = pd.read_csv(CSV_FILE)
-        print(df)
 
 def suite() : 
     suite = unittest.TestSuite()
     #suite.addTest(TestSlackFunctions('test_channel_exists'))
-    #suite.addTest(TestSlackFunctions('test_get_channel_id'))
-    #suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
-    #suite.addTest(TestSlackFunctions('test_get_member_info'))
+    suite.addTest(TestSlackFunctions('test_get_channel_id'))
+    suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
+    suite.addTest(TestSlackFunctions('test_get_member_info'))
     #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
-    suite.addTest(TestSlackFunctions('test_general_num_messages_all'))
     return suite
     
     
