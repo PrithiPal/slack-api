@@ -21,11 +21,11 @@ client = slack_client(token=MY_STEMBOT_TOKEN)
 mongo_client = MongoClient('mongodb://localhost:27017')
 mongodb = mongo_client.pymongo_test
 
-## DB TABLE LIST
+## MONGO DB TABLE LIST 
 
 conversations_list_table = mongodb.conversations_list
 conversations_members_table = mongodb.conversations_members
-channel_table = mongodb.channel_table
+students_table = mongodb.students
 member_table = mongodb.member_table
 
 

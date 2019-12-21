@@ -154,27 +154,52 @@ def db_cache_create() :
     PUBLIC_CHANNELS=client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]
     PRIVATE_CHANNELS=client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]
 
-    for chan in PUBLIC_CHANNELS : 
-        
-        conversations_list_table.insert_one(chan)
-        try : 
-            chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-            payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
-            conversations_members_table.insert_one(payload)
+    EXCLUDE_CHANNELS=["general","stembot_test","mentors"]
+    
+    ## Populates the students table
+    chan_mem=client.conversations_members(channel=get_channel_id("general",is_public=True),limit=MAX_CHANNEL_NUM)
+    members = chan_mem.__dict__["data"]["members"]
+    for m in members:
+        mem_info = client.users_info(user=m)["user"]
+        payload = {"member_id":m, "name":mem_info["name"],"real_name":mem_info["profile"]["real_name"],"phone":mem_info["profile"]["phone"]}
+        member_table.insert_one(payload)   
 
-        except Exception as e : 
-            print("Error : {}".format(e.args))
+    ## Populates the conversation_member table.
+
+    for chan in PUBLIC_CHANNELS : 
+        if chan not in EXCLUDE_CHANNELS : 
+        
+            conversations_list_table.insert_one(chan)
+            try : 
+                chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+                members = chan_mem.__dict__["data"]["members"]
+                payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":members}
+                conversations_members_table.insert_one(payload)
+                
+                for m in members:
+                    member_table.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
+
+            except Exception as e : 
+                print("Error : {}".format(e.args))
 
 
     for chan in PRIVATE_CHANNELS : 
-        conversations_list_table.insert_one(chan)
-        try : 
-            chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-            payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
-            conversations_members_table.insert_one(payload)
-        except Exception as e : 
-            
-            print("Error : {}".format(e.args))
+        if chan not in EXCLUDE_CHANNELS : 
+
+            conversations_list_table.insert_one(chan)
+            try : 
+                chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+                payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
+                conversations_members_table.insert_one(payload)
+                
+                for m in members:
+                    member_table.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
+                    
+            except Exception as e : 
+                
+                print("Error : {}".format(e.args))
+    
+
 
 
 
