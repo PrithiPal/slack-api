@@ -1,0 +1,26 @@
+version: '2.2'
+services:
+  mongo_server:
+    image: "mongo"
+    ports:
+      - "27017:27017"
+    networks:
+      - slack_net
+  
+  mongo_client:
+    image: "mongoclient/mongoclient"
+    depends_on:
+      - mongo_server
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongo_server:27017/pymongo_db
+    networks:
+      - slack_net
+
+networks:
+  slack_net:
+    driver: bridge
+
+
+    

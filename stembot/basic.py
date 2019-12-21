@@ -147,7 +147,8 @@ def main():
     #val = generate_num_messages_all()
     #print(val)
 
-    db_add_members_channel_info()
+    #db_add_members_channel_info()
+    #db_testing()
     
     return 0
     

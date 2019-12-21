@@ -28,11 +28,8 @@ def recored_function_calls(func) :
         return returnval
     return wrapper
 
-client = slack_client(token=MY_STEMBOT_TOKEN)
-mongo_client = MongoClient('localhost',MONGO_PORT)
-mongodb = mongo_client.pymongo_test
-channel_table = mongodb.channel_table
-member_table = mongodb.member_table
+
+
 
 def add_dicts(d1,d2) : 
 
@@ -130,20 +127,46 @@ def db_add_members_channel_info() :
         chan_id = chan["id"]
         chan_is_public = not chan["is_private"]
         members = get_channel_members_ids(chan_id,is_public=chan_is_public)
-        member_names = list(map(lambda x:get_member_info(x),members))
+        #member_names = list(map(lambda x:get_member_info(x),members))
 
+        
         channel_table.insert_one({
             "name" : chan_name ,
             "id" : chan_id,
             "is_public" : True,
-            "members" : members
+            #"members" : members
         })
 
-        member_table.insert_many(
-            [{"name":x["real_name"],"id":y} for x,y in zip(member_names,members) ]
-        )
+
+        ## time consuming.
+        #member_table.insert_many(
+        #    [{"name":x["real_name"],"id":y} for x,y in zip(member_names,members) ]
+        #)
+
+def db_testing() : 
+    data = {"col1":"something","col2":"something2"}
+    member_table.insert_one(data)
+    pass
 
 
+def db_cache_create() : 
+    
+    PUBLIC_CHANNELS=client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]
+    PRIVATE_CHANNELS=client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]
+
+
+    for chan in PUBLIC_CHANNELS : 
+        
+        conversations_list_table.insert_one(chan)
+        chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+        print(chan_mem)
+        conversations_members_table.insert_one(chan_mem)
+
+    for chan in PRIVATE_CHANNELS : 
+        conversations_list_table.insert_one(chan)
+        chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+        print(chan_mem)
+        conversations_members_table.insert_one(chan_mem)
 
 
 

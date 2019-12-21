@@ -1,6 +1,8 @@
 import unittest
 import time 
-import basic as api
+import helper_functions as hf
+from parameters import *
+import basic as ba
 import os 
 import slack 
 import numpy as np
@@ -18,7 +20,6 @@ def measure_time(func):
         print("Time taken by {} is {}".format(func.__name__,end-start))
         return returnval
     return wrapper
-
 
 
 class TestSlackFunctions(unittest.TestCase) : 
@@ -67,39 +68,39 @@ class TestSlackFunctions(unittest.TestCase) :
         self.assertTrue(is_present)
         pass
         
-        #chan_id = api.get_channel_id(chan_name,is_public=is_public)
+        #chan_id = hf.get_channel_id(chan_name,is_public=is_public)
         #print(chan_id)
 
     @measure_time
     def test_get_channel_id(self) : 
         print("-- > test_get_channel_id()")
         ind=0
-        self.assertEqual(api.get_channel_id(self.all_public_channels_names[ind],is_public=True),
+        self.assertEqual(hf.get_channel_id(self.all_public_channels_names[ind],is_public=True),
                             self.all_public_channels_ids[ind])
 
-        self.assertEqual(api.get_channel_id(self.public_chan_name,is_public=True),self.public_chan_id)
+        self.assertEqual(hf.get_channel_id(self.public_chan_name,is_public=True),self.public_chan_id)
 
-        self.assertEqual(api.get_channel_id(self.private_chan_name,is_public=False),self.private_chan_id)
+        self.assertEqual(hf.get_channel_id(self.private_chan_name,is_public=False),self.private_chan_id)
         pass
 
     @measure_time
     def test_get_channel_members_ids(self) : 
         print("-- > test_get_channel_members_ids()")
         
-        #print(api.get_channel_members_ids(self.public_chan_name,is_public=True))
-        #print(api.get_channel_members_ids(self.private_chan_name,is_public=False))
+        #print(hf.get_channel_members_ids(self.public_chan_name,is_public=True))
+        #print(hf.get_channel_members_ids(self.private_chan_name,is_public=False))
 
         sol1=['UMRV5AK16', 'UPCDVB3DX', 'UPKS6TRQ8', 'UPUGK9M8D', 'UQ0S162TH', 'UQ30NAU8J', 'UQ99FQWRJ', 'UQBE4GPA5', 'UQBVABEA2', 'UQC6DRSTZ', 'UQKBT6H16', 'UQKC9EBT7']
         sol2=['UMRV5AK16', 'UP5BWTWGZ', 'UPB0D7892', 'UPBEANB37', 'UPBQHEZCG', 'UPN3DUTRC']
         
-        self.assertEqual(api.get_channel_members_ids(self.public_chan_id,is_public=True),sol1)
-        self.assertEqual(api.get_channel_members_ids(self.private_chan_id,is_public=False),sol2)
+        self.assertEqual(hf.get_channel_members_ids(self.public_chan_id,is_public=True),sol1)
+        self.assertEqual(hf.get_channel_members_ids(self.private_chan_id,is_public=False),sol2)
         pass
 
     @measure_time
     def test_get_member_info(self) : 
         print("-- > test_get_member_info()")
-        val = api.get_member_info(self.user1)
+        val = hf.get_member_info(self.user1)
         sol = {'real_name': 'BDC Admin'}
         self.assertEqual(val,sol)
 
@@ -115,24 +116,26 @@ class TestSlackFunctions(unittest.TestCase) :
         for c in missed_channels : 
             chan_name = c[0]
             is_public = c[1]
-            output = api.channel_message_analysis(chan_name,is_public=is_public)
+            output = ba.channel_message_analysis(chan_name,is_public=is_public)
             if output == {}:
                 print("{} unprocessed ".format(chan_name))
             else : 
                 try : 
-                    all_data = api.add_dicts(all_data,output)
+                    all_data = hf.add_dicts(all_data,output)
                 except Exception as err : 
                     print('err : {}',err.args)
         
-        response = api.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
+        response = ba.channel_message_analysis(SAMPLE_CHAN_NAME,is_public=IS_PUBLIC)
         print(response)
         pass
-    
-    @measure_time
-    def test_get_channel_members_df(self) : 
 
-        val = api.get_channel_members_df()
-        print(val)
+    @measure_time
+    def test_db(self) : 
+        print("-- > test_db()")
+        #hf.db_testing()
+        #hf.db_add_members_channel_info()
+        hf.db_cache_create()
+
 
 
 
@@ -143,7 +146,8 @@ def suite() :
     #suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
     #suite.addTest(TestSlackFunctions('test_get_member_info'))
     #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
-    suite.addTest(TestSlackFunctions('test_get_channel_members_df'))
+    suite.addTest(TestSlackFunctions('test_db'))
+    
     return suite
     
     
