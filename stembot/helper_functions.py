@@ -154,19 +154,27 @@ def db_cache_create() :
     PUBLIC_CHANNELS=client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]
     PRIVATE_CHANNELS=client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]
 
-
     for chan in PUBLIC_CHANNELS : 
         
         conversations_list_table.insert_one(chan)
-        chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-        print(chan_mem)
-        conversations_members_table.insert_one(chan_mem)
+        try : 
+            chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+            payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
+            conversations_members_table.insert_one(payload)
+
+        except Exception as e : 
+            print("Error : {}".format(e.args))
+
 
     for chan in PRIVATE_CHANNELS : 
         conversations_list_table.insert_one(chan)
-        chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-        print(chan_mem)
-        conversations_members_table.insert_one(chan_mem)
+        try : 
+            chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
+            payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
+            conversations_members_table.insert_one(payload)
+        except Exception as e : 
+            
+            print("Error : {}".format(e.args))
 
 
 
