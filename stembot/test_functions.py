@@ -1,6 +1,7 @@
 import unittest
 import time 
 import helper_functions as hf
+import db_functions as df
 from parameters import *
 import basic as ba
 import os 
@@ -132,10 +133,9 @@ class TestSlackFunctions(unittest.TestCase) :
     @measure_time
     def test_db(self) : 
         print("-- > test_db()")
-        #hf.db_testing()
-        #hf.db_add_members_channel_info()
-        hf.db_cache_create()
-
+        
+        df.db_cache_create()
+        
 
 
 

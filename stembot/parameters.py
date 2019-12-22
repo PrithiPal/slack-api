@@ -23,11 +23,11 @@ mongodb = mongo_client.pymongo_test
 
 ## MONGO DB TABLE LIST 
 
-conversations_list_table = mongodb.conversations_list
-conversations_members_table = mongodb.conversations_members
-students_table = mongodb.students
-member_table = mongodb.member_table
-
+conversations_list_table_raw = mongodb.conversations_list_raw
+conversations_members_table_raw = mongodb.conversations_members_raw
+students_table = mongodb.students_raw
+member_table_raw = mongodb.member_raw
+conversation_history_table_raw = mongodb.conversations_history_raw
 
 ## CACHED DATA (things that takes too much time to call each time.)
 

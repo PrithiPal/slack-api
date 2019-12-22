@@ -8,7 +8,7 @@ from typing import Dict, List
 from pymongo import MongoClient
 from slack import WebClient as slack_client
 from parameters import *
-
+from db_functions import *
 
 ## WRAPPER FUNCTIONS 
 def measure_time(func):
@@ -90,10 +90,8 @@ def get_channel_members_ids(channel_id : str , is_public : bool ) -> List[int] :
 @recored_function_calls
 def get_member_info(member_id : str ) -> Dict[str,str] : 
 
-    
     presence_info = client.users_getPresence(user=member_id)
     user_identity = client.users_info(user=member_id)
-
 
     try : 
         for user in user_identity : 
@@ -118,88 +116,4 @@ def get_channel_info(channel_id : str,is_public : bool) -> Dict[str,str] :
     chan_creator = public_channel_info["channel"]["creator"]
     team_id = public_channel_info["channel"]["shared_team_ids"]
     return {'creator':chan_creator,'members':channel_member_ids,'channel_id':channel_id}
-
-
-def db_add_members_channel_info() : 
-    
-    for chan in PRIVATE_CHANNELS : 
-        chan_name = chan["name"]
-        chan_id = chan["id"]
-        chan_is_public = not chan["is_private"]
-        members = get_channel_members_ids(chan_id,is_public=chan_is_public)
-        #member_names = list(map(lambda x:get_member_info(x),members))
-
-        
-        channel_table.insert_one({
-            "name" : chan_name ,
-            "id" : chan_id,
-            "is_public" : True,
-            #"members" : members
-        })
-
-
-        ## time consuming.
-        #member_table.insert_many(
-        #    [{"name":x["real_name"],"id":y} for x,y in zip(member_names,members) ]
-        #)
-
-def db_testing() : 
-    data = {"col1":"something","col2":"something2"}
-    member_table.insert_one(data)
-    pass
-
-
-def db_cache_create() : 
-    
-    PUBLIC_CHANNELS=client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]
-    PRIVATE_CHANNELS=client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]
-
-    EXCLUDE_CHANNELS=["general","stembot_test","mentors"]
-    
-    ## Populates the students table
-    chan_mem=client.conversations_members(channel=get_channel_id("general",is_public=True),limit=MAX_CHANNEL_NUM)
-    members = chan_mem.__dict__["data"]["members"]
-    for m in members:
-        mem_info = client.users_info(user=m)["user"]
-        payload = {"member_id":m, "name":mem_info["name"],"real_name":mem_info["profile"]["real_name"],"phone":mem_info["profile"]["phone"]}
-        member_table.insert_one(payload)   
-
-    ## Populates the conversation_member table.
-
-    for chan in PUBLIC_CHANNELS : 
-        if chan not in EXCLUDE_CHANNELS : 
-        
-            conversations_list_table.insert_one(chan)
-            try : 
-                chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-                members = chan_mem.__dict__["data"]["members"]
-                payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":members}
-                conversations_members_table.insert_one(payload)
-                
-                for m in members:
-                    member_table.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
-
-            except Exception as e : 
-                print("Error : {}".format(e.args))
-
-
-    for chan in PRIVATE_CHANNELS : 
-        if chan not in EXCLUDE_CHANNELS : 
-
-            conversations_list_table.insert_one(chan)
-            try : 
-                chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
-                payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
-                conversations_members_table.insert_one(payload)
-                
-                for m in members:
-                    member_table.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
-                    
-            except Exception as e : 
-                
-                print("Error : {}".format(e.args))
-    
-
-
-
 
