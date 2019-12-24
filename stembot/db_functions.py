@@ -20,6 +20,7 @@ def get_conversation_history(channel_name,is_public) :
         user_history = {}
         chan_history = client.conversations_history(channel=chan_id,limit=PAGINATION_LIMIT)
         
+        msg=chan_history.__dict__["data"]["messages"]
         payload={"channel_id":chan_id,"channel_name":channel_name,"messages":chan_history.__dict__["data"]["messages"]}
         
         conversation_history_table_raw.insert_one(payload)
@@ -146,16 +147,11 @@ def db_cache_create() :
     PUBLIC_CHANNELS=client.conversations_list(types="public_channel",limit=CHANNEL_NUM)["channels"]
     PRIVATE_CHANNELS=client.conversations_list(types="private_channel",limit=CHANNEL_NUM)["channels"]
 
-    EXCLUDE_CHANNELS=["general","stembot_test","mentors"]
+    EXCLUDE_CHANNELS=["stembot_test"]
     
     ## Populates the students table
     chan_mem=client.conversations_members(channel=hf.get_channel_id("general",is_public=True),limit=MAX_CHANNEL_NUM)
     members = chan_mem.__dict__["data"]["members"]
-    for m in members:
-        mem_info = client.users_info(user=m)["user"]
-        payload = {"member_id":m, "name":mem_info["name"],"real_name":mem_info["profile"]["real_name"],"phone":mem_info["profile"]["phone"]}
-        member_table_raw.insert_one(payload)   
-
     ## Populates the conversation_member table.
 
     for chan in PUBLIC_CHANNELS : 
@@ -167,9 +163,6 @@ def db_cache_create() :
                 members = chan_mem.__dict__["data"]["members"]
                 payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":members}
                 conversations_members_table_raw.insert_one(payload)
-                
-                for m in members:
-                    member_table_raw.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
 
             except Exception as e : 
                 print("Error : {}".format(e.args))
@@ -183,9 +176,6 @@ def db_cache_create() :
                 chan_mem = client.conversations_members(channel=chan["id"],limit=MAX_CHANNEL_NUM)
                 payload = {"channel_id":chan["id"],"channel_name":chan["name"],"members":chan_mem.__dict__["data"]["members"]}
                 conversations_members_table_raw.insert_one(payload)
-                
-                for m in members:
-                    member_table_raw.update_one({"member_id":m},{"$set":{"channel_id":chan["id"],"channel_name":chan["name"]}})
 
             except Exception as e : 
                 
@@ -193,3 +183,58 @@ def db_cache_create() :
 
 
     db_conversation_history_table()
+
+
+def db_create_report_num_messages():
+
+    
+    val1=conversations_members_table_raw.aggregate([
+        {"$unwind":"$members"},
+        {"$project":
+            {
+            "_id":0,
+            "channel_id":1,
+            "channel_name":1,
+            "user_id":"$members"
+            }
+        },
+        {"$group":
+            {
+            "_id":{"user_id":"$user_id","channel_id":"$channel_id","channel_name":"$channel_name"}
+            }
+        }
+    ])
+    member_table_raw.insert_many(val1)
+
+
+    distinct_users = conversations_members_table_raw.distinct("members")
+    
+    for user in distinct_users : 
+        user_info = client.users_info(user=user).__dict__["data"]["user"]
+        payload={"user_name":user_info["name"],"user_real_name":user_info["real_name"]}
+        member_table_raw.update({"_id.user_id":user},{"$set":payload})
+    
+
+    """
+ 
+    val=conversation_history_table_raw.aggregate([
+        {"$unwind":"$messages"},
+        {"$project":{"_id":0,"text":"$messages.text","user":"$messages.user"}},
+        {"$group":{"_id":{'user':'$user','channel_id':'$channel_id','channel_name':'$channel_name'}, "num_messages" : {"$sum" : 1}}}])
+    num_messages_members_table.insert_many(val)
+    
+    val1 = num_messages_members_table.aggregate([
+        {"$lookup":
+        {"from":"member_raw",
+        "localField":"_id.user",
+        "foreignField":"user_id",
+        "as":"russel_peters"
+        }}])
+
+    num_messages_members_table2.insert_many(val1)
+
+
+
+    """
+    
+

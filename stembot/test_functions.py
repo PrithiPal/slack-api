@@ -134,7 +134,8 @@ class TestSlackFunctions(unittest.TestCase) :
     def test_db(self) : 
         print("-- > test_db()")
         
-        df.db_cache_create()
+        #df.db_cache_create()
+        df.db_create_report_num_messages()
         
 
 
