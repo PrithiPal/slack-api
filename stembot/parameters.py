@@ -34,7 +34,8 @@ conversation_history_table_raw = mongodb.conversations_history_raw
 
 ## STRUCTURED TABLES 
 num_messages_members_table = mongodb.num_messages_members
-num_messages_members_table2 = mongodb.num_messages_members_2
+num_messages_members2_table = mongodb.num_messages_members2
+num_message_user_info_table = mongodb.num_message_user_info
 
 ## CACHED DATA (things that takes too much time to call each time.)
 

@@ -186,8 +186,7 @@ def db_cache_create() :
 
 
 def db_create_report_num_messages():
-
-    
+    """
     val1=conversations_members_table_raw.aggregate([
         {"$unwind":"$members"},
         {"$project":
@@ -205,17 +204,15 @@ def db_create_report_num_messages():
         }
     ])
     member_table_raw.insert_many(val1)
-
-
+    
     distinct_users = conversations_members_table_raw.distinct("members")
     
     for user in distinct_users : 
         user_info = client.users_info(user=user).__dict__["data"]["user"]
-        payload={"user_name":user_info["name"],"user_real_name":user_info["real_name"]}
-        member_table_raw.update({"_id.user_id":user},{"$set":payload})
+        payload={"user_id":user,"user_name":user_info["name"],"user_real_name":user_info["real_name"]}
+        print(payload)
+        member_table_raw.update({"_id.user_id":user},{"$set":payload},multi=True)
     
-
-    """
  
     val=conversation_history_table_raw.aggregate([
         {"$unwind":"$messages"},
@@ -223,18 +220,37 @@ def db_create_report_num_messages():
         {"$group":{"_id":{'user':'$user','channel_id':'$channel_id','channel_name':'$channel_name'}, "num_messages" : {"$sum" : 1}}}])
     num_messages_members_table.insert_many(val)
     
+
+
     val1 = num_messages_members_table.aggregate([
         {"$lookup":
-        {"from":"member_raw",
-        "localField":"_id.user",
-        "foreignField":"user_id",
-        "as":"russel_peters"
-        }}])
+            {"from":"member_raw",
+            "localField":"_id.user",
+            "foreignField":"_id.user_id",
+            "as":"russel_peters"
+            }
+        }
+    ])
 
-    num_messages_members_table2.insert_many(val1)
-
-
-
+    num_messages_members2_table.insert_many(val1)
     """
+
+    val2 = num_messages_members2_table.aggregate([
+        {"$project":
+            {"num_messages":1,
+             "user_id":{"$arrayElemAt":["$russel_peters.user_id",0]},
+             "user_name":{"$arrayElemAt":["$russel_peters.user_name",0]},
+             "user_real_name":{"$arrayElemAt":["$russel_peters.user_real_name",0]},
+             "channel_ids":"$russel_peters._id.channel_id",
+             "channel_names":"$russel_peters._id.channel_name"
+            }
+        }
+    ])
+
+    num_message_user_info_table.insert_many(val2)
+
+    ## drop unnecessary tables.
+    #num_messages_members_table.drop()
+
     
 
