@@ -186,7 +186,7 @@ def db_cache_create() :
 
 
 def db_create_report_num_messages():
-    """
+    
     val1=conversations_members_table_raw.aggregate([
         {"$unwind":"$members"},
         {"$project":
@@ -233,7 +233,7 @@ def db_create_report_num_messages():
     ])
 
     num_messages_members2_table.insert_many(val1)
-    """
+    
 
     val2 = num_messages_members2_table.aggregate([
         {"$project":
