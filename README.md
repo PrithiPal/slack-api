@@ -14,7 +14,9 @@ The write-up is about the infrastructure provided workspace already been setup. 
 - participant student
 - mentor
 
+### Code Layout
 
+![Image description](https://github.com/PrithiPal/slack-api/blob/master/assets/slack_api_code_architecture.jpeg)
 
 
 
