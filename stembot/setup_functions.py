@@ -8,18 +8,29 @@ import re
 from typing import Dict, List
 from pymongo import MongoClient
 from parameters import *
+import requests 
+from random import random,seed 
+from datetime import datetime 
+from math import ceil 
 
 ## HELPER FUNCTIONS for SETUP
-def create_channel(chan_name,chan_private,user_id_list) : 
-    response = client.conversations_create(name=chan_name,is_private=chan_private)
-    # print(response)
-    response2 = client.conversations_invite(channel=response['channel']['id'],users=user_id_list)
+def create_channel(chan_name,chan_private) : 
     
+    response = client.conversations_create(name=chan_name,is_private=chan_private)
+    #print("Channel Created [{}] {}".format(chan_name,response['channel']['id']))
+    return response
+
+def assign_members(chan_id,user_id_list) : 
+    response = client.conversations_invite(channel=chan_id,users=user_id_list)
     return response
 
 def get_users_all() : 
     response = client.users_list()
     return response 
+
+def delete_channel(chan_id) : 
+    resp=client.conversations_archive(channel=chan_id)
+    return resp 
 
 
 def slugify(string) : 
@@ -28,10 +39,27 @@ def slugify(string) :
     new_string = re.sub("\.","_",new_string)
     return new_string
 
+    
+def generate_team_name(row) : 
+    API_LINK = "https://frightanic.com/goodies_content/docker-names.php"
+    resp=requests.get(API_LINK).text
+    
+    seed_value = datetime.timestamp(datetime.now())
+    seed(seed_value)
+    randval = ceil(random()*1000000)
+    
+    FINAL="{}_{}".format(resp[:-1],randval)
+    #print(FINAL)
+    return FINAL
+
+
+df=pd.read_csv(STUDENTS_CSV,parse_dates=['Submission Time'])
+
+
 def create_student_invite_list() : 
 
-    df=pd.read_csv(STUDENTS_CSV,parse_dates=['Submission Time'])
     EMAIL_LIST=[]
+    
     def gather_email(row) : 
         
         if row['Email Address'] is not np.nan : 
@@ -42,13 +70,39 @@ def create_student_invite_list() :
             EMAIL_LIST.append(str(row['Email Address.2']))
         if row["Email Address.3"] is not np.nan : 
             EMAIL_LIST.append(str(row['Email Address.3']))
-            
+
+
     df.apply(gather_email,axis=1)
 
     sample_file=open("student_invite_emails.txt","w")
     sample_file.write(",".join(EMAIL_LIST))
     sample_file.close()
     print("Output to {}".format(STUDENT_INVITE_LIST))
+
+
+
+## AGGREGATE FUNCTIONS FOR WHOLE BDC WORKSPACE
+
+def create_all_student_channels() : 
+
+    def processTeam(row) : 
+
+        GENERATE_TEAM_NAME = generate_team_name('random')
+        chan_id = create_channel(GENERATE_TEAM_NAME,False)['channel']['id']
+        #print("--> {}".format(chan_id))
+        
+        NEW_TEAM_NAME = "{}_{}".format(GENERATE_TEAM_NAME,chan_id)
+        students_table_raw.insert_one({'channel_id':chan_id,'team_name':NEW_TEAM_NAME})
+        
+        print("NEW --> {}".format(NEW_TEAM_NAME))
+        client.conversations_rename(channel=chan_id,name=NEW_TEAM_NAME.lower())
+
+
+    mydf=df[:3]
+    mydf.apply(processTeam,axis=1)
+
+def delete_all_student_channels() : 
+    pass 
 
 
 

@@ -21,6 +21,7 @@ client = slack_client(token=MY_STEMBOT_TOKEN)
 STUDENTS_CSV = "localfiles/Prithi.csv"
 STUDENT_INVITE_LIST = "localfiles/student_invite_list.txt"
 
+
 ## MONGO DB settings 
 
 mongo_client = MongoClient('mongodb://localhost:27017')

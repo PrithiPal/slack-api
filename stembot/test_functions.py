@@ -13,6 +13,9 @@ import numpy as np
 import pandas as pd
 from slack import WebClient as slack_client
 
+from random import random,seed 
+from datetime import datetime 
+from math import ceil 
 
 def measure_time(func):
     def wrapper(*args,**kwargs):
@@ -142,7 +145,7 @@ class TestSlackFunctions(unittest.TestCase) :
     def test_channel_creation(self) : 
         print("-- > test_channel_creation()")
 
-        CHANNEL_NAME="test_channel_name7"
+        CHANNEL_NAME="test_channel_name6"
         IS_PRIVATE=False
 
         SAMPLE_ID1="U0136DUHHPG"
@@ -160,11 +163,32 @@ class TestSlackFunctions(unittest.TestCase) :
             SAMPLE_ID5
         ]
 
-        sf.create_channel(
-            CHANNEL_NAME,
-            IS_PRIVATE,
-            USER_LIST
-        )
+        # channel_id = sf.create_channel( CHANNEL_NAME, IS_PRIVATE)['channel']['id']
+        # print("Created channel {} [{}]".format(CHANNEL_NAME,channel_id))
+        # sf.assign_members(channel_id,USER_LIST)
+        # print("Assigned Members ")
+
+        for channel_id in CHANS : 
+            sf.delete_channel(channel_id)
+        
+        #print("Archived Channel")
+
+    @measure_time 
+    def test_generate_team_name(self) : 
+        print("-- > test_generate_team_name()")
+        for i in range(100) : 
+            name = sf.generate_team_name()
+            seed_value = datetime.timestamp(datetime.now())
+            seed(seed_value)
+            randval = ceil(random()*1000000)
+            print("{}_{}".format(name,randval))
+
+    @measure_time
+    def test_create_all_student_channels(self) : 
+        print("-- > test_create_all_student_channels()")
+        sf.create_all_student_channels()
+
+
 
 
 
@@ -176,7 +200,9 @@ def suite() :
     #suite.addTest(TestSlackFunctions('test_get_member_info'))
     #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
     #suite.addTest(TestSlackFunctions('test_db'))
-    suite.addTest(TestSlackFunctions('test_channel_creation'))
+    #suite.addTest(TestSlackFunctions('test_channel_creation'))
+    #suite.addTest(TestSlackFunctions('test_generate_team_name'))
+    suite.addTest(TestSlackFunctions('test_create_all_student_channels'))
 
     return suite
 

@@ -20,7 +20,8 @@ def main():
     #db_create_report_num_messages()
     #db_students_table_raw()
 
-    create_student_invite_list()
+    #create_student_invite_list()
+    create_all_student_channels()
     return  0 
 
 if __name__=="__main__" : 
