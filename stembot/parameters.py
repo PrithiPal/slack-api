@@ -19,7 +19,7 @@ client = slack_client(token=MY_STEMBOT_TOKEN)
 ## INPUT CSV FILE
 
 STUDENTS_CSV = "localfiles/Prithi.csv"
-
+STUDENT_INVITE_LIST = "localfiles/student_invite_list.txt"
 
 ## MONGO DB settings 
 
@@ -41,6 +41,11 @@ conversation_history_table_raw = mongodb.conversations_history_raw
 num_messages_members_table = mongodb.num_messages_members
 num_messages_members2_table = mongodb.num_messages_members2
 num_message_user_info_table = mongodb.num_message_user_info
+
+
+
+## WORKSPACE CREATION TABLES 
+students_table_raw = mongodb.students_table_raw
 
 ## CACHED DATA (things that takes too much time to call each time.)
 
