@@ -6,13 +6,17 @@ import pandas as pd
 import numpy as np 
 from typing import Dict, List
 from pymongo import MongoClient
+from parameters import client 
 
-from parameters import *
 
-def create_team(team_domain,team_name) : 
+def create_channel(chan_name,chan_private) : 
+    response = client.conversations_create(name=chan_name,is_private=chan_private)
+    return response
 
-    resp = client.admin_teams_create(
-        team_domain=team_domain,
-        team_name=team_name
-        )
-    return resp 
+def get_users_all() : 
+    response = client.users_list()
+    return response 
+
+
+def read_users_csv() : 
+    pd.read_csv(STUDENTS_CSV,delimiter=",")
