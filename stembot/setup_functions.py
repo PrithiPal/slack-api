@@ -10,8 +10,11 @@ from pymongo import MongoClient
 from parameters import *
 
 ## HELPER FUNCTIONS for SETUP
-def create_channel(chan_name,chan_private) : 
+def create_channel(chan_name,chan_private,user_id_list) : 
     response = client.conversations_create(name=chan_name,is_private=chan_private)
+    # print(response)
+    response2 = client.conversations_invite(channel=response['channel']['id'],users=user_id_list)
+    
     return response
 
 def get_users_all() : 
@@ -32,7 +35,6 @@ def create_student_invite_list() :
     def gather_email(row) : 
         
         if row['Email Address'] is not np.nan : 
-            
             EMAIL_LIST.append(str(row['Email Address']))
         if row['Email Address.1'] is not np.nan: 
             EMAIL_LIST.append(str(row['Email Address.1']))

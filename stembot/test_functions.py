@@ -1,7 +1,10 @@
 import unittest
 import time
+
 import helper_functions as hf
 import db_functions as df
+import setup_functions as sf 
+
 from parameters import *
 import basic as ba
 import os
@@ -10,8 +13,6 @@ import numpy as np
 import pandas as pd
 from slack import WebClient as slack_client
 
-MY_STEMBOT_TOKEN=os.getenv("STEMBOT_TOKEN")
-client = slack_client(token=MY_STEMBOT_TOKEN)
 
 def measure_time(func):
     def wrapper(*args,**kwargs):
@@ -137,6 +138,33 @@ class TestSlackFunctions(unittest.TestCase) :
         #df.db_cache_create()
         df.db_create_report_num_messages()
 
+    @measure_time 
+    def test_channel_creation(self) : 
+        print("-- > test_channel_creation()")
+
+        CHANNEL_NAME="test_channel_name7"
+        IS_PRIVATE=False
+
+        SAMPLE_ID1="U0136DUHHPG"
+        SAMPLE_ID2="U013D76B97D"
+        SAMPLE_ID3="U0136DUHHPG"
+        SAMPLE_ID4="U0136AJ7Y86"
+        SAMPLE_ID5="U013LFVGVLP"
+        SAMPLE_ID5="U0141EEFBSP"
+
+        USER_LIST=[
+            SAMPLE_ID2,
+            SAMPLE_ID1,
+            SAMPLE_ID3,
+            SAMPLE_ID4,
+            SAMPLE_ID5
+        ]
+
+        sf.create_channel(
+            CHANNEL_NAME,
+            IS_PRIVATE,
+            USER_LIST
+        )
 
 
 
@@ -147,7 +175,8 @@ def suite() :
     #suite.addTest(TestSlackFunctions('test_get_channel_members_ids'))
     #suite.addTest(TestSlackFunctions('test_get_member_info'))
     #suite.addTest(TestSlackFunctions('test_channel_message_analysis'))
-    suite.addTest(TestSlackFunctions('test_db'))
+    #suite.addTest(TestSlackFunctions('test_db'))
+    suite.addTest(TestSlackFunctions('test_channel_creation'))
 
     return suite
 
