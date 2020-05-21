@@ -16,7 +16,9 @@ The write-up is about the infrastructure provided workspace already been setup. 
 
 ### Code Layout
 
-![Image description](https://github.com/PrithiPal/slack-api/blob/master/assets/slack_api_code_architecture.jpeg)
+![Code layout](https://github.com/PrithiPal/slack-api/blob/master/assets/slack_api_code_architecture.jpeg)
 
 
+#### Database Layout 
 
+![mongo tables](https://github.com/PrithiPal/slack-api/blob/master/assets/slack-api_mongo_layout.jpeg)
