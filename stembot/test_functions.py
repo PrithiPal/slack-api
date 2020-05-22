@@ -145,7 +145,7 @@ class TestSlackFunctions(unittest.TestCase) :
     def test_channel_creation(self) : 
         print("-- > test_channel_creation()")
 
-        CHANNEL_NAME="test_channel_name6"
+        CHANNEL_NAME="modest_northcutt_904049_c013nhlkmfh"
         IS_PRIVATE=False
 
         SAMPLE_ID1="U0136DUHHPG"
@@ -165,11 +165,15 @@ class TestSlackFunctions(unittest.TestCase) :
 
         # channel_id = sf.create_channel( CHANNEL_NAME, IS_PRIVATE)['channel']['id']
         # print("Created channel {} [{}]".format(CHANNEL_NAME,channel_id))
-        # sf.assign_members(channel_id,USER_LIST)
+        
+        
+        sf.assign_members(CHANNEL_NAME[-11:].upper(),USER_LIST)
+        
+        
         # print("Assigned Members ")
 
-        for channel_id in CHANS : 
-            sf.delete_channel(channel_id)
+        #for channel_id in CHANS : 
+        #    sf.delete_channel(channel_id)
         
         #print("Archived Channel")
 

@@ -13,6 +13,8 @@ from random import random,seed
 from datetime import datetime 
 from math import ceil 
 
+
+
 ## HELPER FUNCTIONS for SETUP
 def create_channel(chan_name,chan_private) : 
     
@@ -74,7 +76,7 @@ def create_student_invite_list() :
 
     df.apply(gather_email,axis=1)
 
-    sample_file=open("student_invite_emails.txt","w")
+    sample_file=open("localfiles/student_invite_emails.txt","w")
     sample_file.write(",".join(EMAIL_LIST))
     sample_file.close()
     print("Output to {}".format(STUDENT_INVITE_LIST))
@@ -97,13 +99,28 @@ def create_all_student_channels() :
         print("NEW --> {}".format(NEW_TEAM_NAME))
         client.conversations_rename(channel=chan_id,name=NEW_TEAM_NAME.lower())
 
+        # Assign student to Workspace
+        user1=client.users_lookupByEmail(email=row['Email Address'])
+        user2=client.users_lookupByEmail(email=row['Email Address.1'])
+        user3=client.users_lookupByEmail(email=row['Email Address.2'])
+        user4=client.users_lookupByEmail(email=row['Email Address.3'])
 
-    mydf=df[:3]
+        STUDENT_USER_IDS=[
+            user1,user2,user3,user4
+        ]
+        
+        assign_members(chan_id,STUDENT_USER_IDS)
+        
+        ## Assigns permissions to ADMINS
+        assign_members(chan_id,ADMIN_USERIDS)
+
+
+    mydf=df[:1]
     mydf.apply(processTeam,axis=1)
 
 def delete_all_student_channels() : 
+        
     pass 
-
 
 
 ## DB CREATION FUNCTIONS 
