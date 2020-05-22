@@ -12,7 +12,7 @@ import requests
 from random import random,seed 
 from datetime import datetime 
 from math import ceil 
-
+import time 
 
 
 ## HELPER FUNCTIONS for SETUP
@@ -55,7 +55,7 @@ def generate_team_name(row) :
     return FINAL
 
 
-df=pd.read_csv(STUDENTS_CSV,parse_dates=['Submission Time'])
+df=pd.read_csv(STUDENTS_CSV,parse_dates=['Submission Time'],)
 
 
 def create_student_invite_list() : 
@@ -76,10 +76,15 @@ def create_student_invite_list() :
 
     df.apply(gather_email,axis=1)
 
-    sample_file=open("localfiles/student_invite_emails.txt","w")
+    sample_file=open(STUDENT_INVITE_LIST,"w")
     sample_file.write(",".join(EMAIL_LIST))
     sample_file.close()
     print("Output to {}".format(STUDENT_INVITE_LIST))
+
+    readable_file = open(STUDENT_READABLE_LIST,"w")
+    readable_file.write(",\n".join(EMAIL_LIST))
+    readable_file.close()
+    print("Readable output to {}".format(STUDENT_READABLE_LIST))
 
 
 
@@ -87,10 +92,12 @@ def create_student_invite_list() :
 
 def create_all_student_channels() : 
 
+    TEAMS_PROCESSED = 0 
+
     def processTeam(row) : 
 
         GENERATE_TEAM_NAME = generate_team_name('random')
-        chan_id = create_channel(GENERATE_TEAM_NAME,False)['channel']['id']
+        chan_id = create_channel(GENERATE_TEAM_NAME,True)['channel']['id']
         #print("--> {}".format(chan_id))
         
         NEW_TEAM_NAME = "{}_{}".format(GENERATE_TEAM_NAME,chan_id)
@@ -100,22 +107,31 @@ def create_all_student_channels() :
         client.conversations_rename(channel=chan_id,name=NEW_TEAM_NAME.lower())
 
         # Assign student to Workspace
-        user1=client.users_lookupByEmail(email=row['Email Address'])
-        user2=client.users_lookupByEmail(email=row['Email Address.1'])
-        user3=client.users_lookupByEmail(email=row['Email Address.2'])
-        user4=client.users_lookupByEmail(email=row['Email Address.3'])
+        STUDENT_USER_IDS=[]
+        if row['Email Address'] is not np.nan : 
+            user1=client.users_lookupByEmail(email=row['Email Address'])['user']['id']
+            #print(user1)
+            STUDENT_USER_IDS.append(user1)
+        if row['Email Address.1'] is not np.nan: 
+            user2=client.users_lookupByEmail(email=row['Email Address.1'])['user']['id']
+            STUDENT_USER_IDS.append(user2)
+        if row['Email Address.2'] is not np.nan: 
+            user3=client.users_lookupByEmail(email=row['Email Address.2'])['user']['id']
+            STUDENT_USER_IDS.append(user3)
+        if row["Email Address.3"] is not np.nan : 
+            user4=client.users_lookupByEmail(email=row['Email Address.3'])['user']['id']
+            STUDENT_USER_IDS.append(user4)
 
-        STUDENT_USER_IDS=[
-            user1,user2,user3,user4
-        ]
+    
+
+        ## Assigns permissions to ADMINS
         
         assign_members(chan_id,STUDENT_USER_IDS)
-        
-        ## Assigns permissions to ADMINS
         assign_members(chan_id,ADMIN_USERIDS)
+        time.sleep(1)
 
 
-    mydf=df[:1]
+    mydf=df
     mydf.apply(processTeam,axis=1)
 
 def delete_all_student_channels() : 

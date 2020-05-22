@@ -18,12 +18,15 @@ def main():
     # print(get_users_all())
     #db_cache_create()
     
-    db_create_report_num_messages()
+    #db_create_report_num_messages()
     #db_students_table_raw()
 
     #create_student_invite_list()
-    #create_all_student_channels()
+    create_all_student_channels()
+    
     #create_student_invite_list()
+
+
     return  0 
 
 if __name__=="__main__" : 

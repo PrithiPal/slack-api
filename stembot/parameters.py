@@ -18,16 +18,15 @@ client = slack_client(token=MY_STEMBOT_TOKEN)
 
 ## INPUT CSV FILE
 
-STUDENTS_CSV = "localfiles/Prithi.csv"
+STUDENTS_CSV = "localfiles/dummy.csv"
 STUDENT_INVITE_LIST = "localfiles/student_invite_list.txt"
-
+STUDENT_READABLE_LIST = "localfiles/readable_student_invite_emails.txt"
 ADMIN_USERIDS=[
     "U0136DUHHPG",
-    "U013D76B97D",
-    "U0136DUHHPG",
+    "U013D76B97D", 
     "U0136AJ7Y86",
-    "U013LFVGVLP",
-    "U0141EEFBSP"
+    # "U013ALLGH8E", My userid
+    "U013D76B97D",
 ]
 
 ## MONGO DB settings 
