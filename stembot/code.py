@@ -11,20 +11,33 @@ from slack import WebClient as slack_client
 from parameters import *
 from setup_functions import *
 from db_functions import * 
+from realtime import * 
 
-
+import time 
 def main():
     
     # print(get_users_all())
+
+    ## DB FUNCTIONS 
+
+
     #db_cache_create()
     
+    time.sleep(2)
+    
     #db_create_report_num_messages()
-    #db_students_table_raw()
+    db_students_table_raw()
+
+
+    ## WORKSPACE CREATION 
+
 
     #create_student_invite_list()
-    create_all_student_channels()
+    #create_all_student_channels()
     
-    #create_student_invite_list()
+    ## MESSAGING CREATION 
+
+    #post_message("#general","Hello there!")
 
 
     return  0 

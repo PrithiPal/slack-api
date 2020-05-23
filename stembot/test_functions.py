@@ -4,7 +4,8 @@ import time
 import helper_functions as hf
 import db_functions as df
 import setup_functions as sf 
-
+import realtime as rt 
+import csv 
 from parameters import *
 import basic as ba
 import os
@@ -12,6 +13,7 @@ import slack
 import numpy as np
 import pandas as pd
 from slack import WebClient as slack_client
+import copy 
 
 from random import random,seed 
 from datetime import datetime 
@@ -181,7 +183,7 @@ class TestSlackFunctions(unittest.TestCase) :
     def test_generate_team_name(self) : 
         print("-- > test_generate_team_name()")
         for i in range(100) : 
-            name = sf.generate_team_name()
+            name = sf.generate_team_name('sample')
             seed_value = datetime.timestamp(datetime.now())
             seed(seed_value)
             randval = ceil(random()*1000000)
@@ -191,6 +193,83 @@ class TestSlackFunctions(unittest.TestCase) :
     def test_create_all_student_channels(self) : 
         print("-- > test_create_all_student_channels()")
         sf.create_all_student_channels()
+
+
+    @measure_time
+    def test_realtime_functions(self) : 
+
+        # df=pd.read_csv(STUDENT_MENTOR_MATCH_LIST)
+        
+        # def processMentor(row) : 
+        #     mentor_userid = client.users_lookupByEmail(email=row['mentor_email'])['user']['id']
+        #     print("Mentor --> {}".format(row['mentor_name']))
+        #     time.sleep(3)
+            
+            
+        #     if row['team1_email'] is not np.nan : 
+        #         sf.assign_members(hf.get_channel_id(row['team1_email'], False),mentor_userid)
+        #         time.sleep(1)
+        #     if row['team2_email'] is not np.nan : 
+        #         sf.assign_members(hf.get_channel_id(row['team2_email'], False),mentor_userid)
+        #         time.sleep(1)
+        #     if row['team3_email'] is not np.nan : 
+        #         sf.assign_members(hf.get_channel_id(row['team3_email'], False),mentor_userid)
+        #         time.sleep(1)
+        #     if row['team4_email'] is not np.nan : 
+        #         sf.assign_members(hf.get_channel_id(row['team4_email'], False),mentor_userid)
+        #         time.sleep(1)
+        #     if row['team5_email'] is not np.nan : 
+        #         sf.assign_members(hf.get_channel_id(row['team5_email'], False),mentor_userid)
+        #         time.sleep(1)
+    
+
+        # df.apply(processMentor,axis=1)
+
+
+        FAILED_MENTORS=[]
+
+        with open(STUDENT_MENTOR_MATCH_LIST) as mentor_file : 
+            csv_reader = csv.reader(mentor_file,delimiter=",")
+            line_count = 0 
+            for row in csv_reader : 
+                if line_count!=0: 
+                    mentor_name = row[0]
+                    mentor_email = row[1]
+                    team1_name = row[2]
+                    team2_name = row[3]
+                    team3_name = row[4]
+                    team4_name = row[5]
+                    team5_name = row[6]
+                    
+                    try : 
+                    
+                        print("{}".format(mentor_name))
+                        mentor_userid = client.users_lookupByEmail(email=mentor_email)['user']['id']
+                        print("{} - {}".format(mentor_name,mentor_userid))
+
+                        if team1_name != "" : 
+                            sf.assign_members(hf.get_channel_id(team1_name, False),mentor_userid)
+                            #time.sleep(1)
+                        if team2_name != "" : 
+                            sf.assign_members(hf.get_channel_id(team2_name, False),mentor_userid)
+                            #time.sleep(1)
+                        if team3_name != "" : 
+                            sf.assign_members(hf.get_channel_id(team3_name, False),mentor_userid)
+                            #time.sleep(1)
+                        if team4_name != "" : 
+                            sf.assign_members(hf.get_channel_id(team4_name, False),mentor_userid)
+                            #time.sleep(1)
+                        if team5_name != "" : 
+                            sf.assign_members(hf.get_channel_id(team5_name, False),mentor_userid)
+                            #time.sleep(1)
+
+                    except:
+                        print("Error")
+
+                    
+
+                line_count += 1
+
 
 
 
@@ -206,8 +285,11 @@ def suite() :
     #suite.addTest(TestSlackFunctions('test_db'))
     #suite.addTest(TestSlackFunctions('test_channel_creation'))
     #suite.addTest(TestSlackFunctions('test_generate_team_name'))
-    suite.addTest(TestSlackFunctions('test_create_all_student_channels'))
-
+    #suite.addTest(TestSlackFunctions('test_create_all_student_channels'))
+    
+    
+    #suite.addTest(TestSlackFunctions('test_generate_team_name'))
+    suite.addTest(TestSlackFunctions('test_realtime_functions'))
     return suite
 
 

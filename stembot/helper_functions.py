@@ -47,14 +47,6 @@ def add_dicts(d1,d2) :
 
     return d3 
 
-@recored_function_calls
-def post_message_to_slack(channel_name,text_to_post) : 
-    response = client.chat_postMessage(
-            channel=channel_name,
-            text=text_to_post
-    ) 
-    assert response["ok"]
-    assert response["message"]["text"] == "Hello world!"
 
 ## test type checking
 @recored_function_calls
@@ -89,9 +81,9 @@ def get_channel_members_ids(channel_id : str , is_public : bool ) -> List[int] :
 @recored_function_calls
 def get_member_info(member_id : str ) -> Dict[str,str] : 
 
-    presence_info = client.users_getPresence(user=member_id)
+    #presence_info = client.users_getPresence(user=member_id)
     user_identity = client.users_info(user=member_id)
-
+    print(user_identity )
     try : 
         for user in user_identity : 
             user_real_name=""
@@ -103,7 +95,11 @@ def get_member_info(member_id : str ) -> Dict[str,str] :
     except : 
         print("[err] : real_name not a key. skipping... ")
     
-    return {"real_name":user_real_name}
+    return {"real_name":user_real_name,
+            "user_id":user_identity['user']["id"],
+            "team_id":user_team_id,
+            "email":user["user"]["profile"]["email"]
+            }
 
 ## add type checking and test type checking
 def get_channel_info(channel_id : str,is_public : bool) -> Dict[str,str] : 

@@ -5,27 +5,51 @@ from pymongo import MongoClient
 ## DEFAULT CONFIGURATIONS DEFINITIONS
 
 MENTOR_CHANNEL_NAME="mentors"
-MY_STEMBOT_TOKEN=os.getenv("SAMPLE_SLACK_TOKEN")
+BOT_NAME="bdcbot"
+
+
+#MY_STEMBOT_TOKEN=os.getenv("SAMPLE_SLACK_TOKEN")
+
+
+SLACK_ADMIN_TOKEN=os.getenv("SLACK_ADMIN_TOKEN")
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
+
+# Turn false to use admin
+USE_BOT_TOKEN=False
+
+
 CHANNEL_NUM = 500
 NUM_REQUESTS = 0
-RATE_LIMIT_TIME_WAIT = 120
-MAX_CHANNEL_NUM=100
+RATE_LIMIT_TIME_WAIT = 0
+
+MAX_CHANNEL_NUM=600
 NUM_FUNC_CALLS=0
 PAGINATION_LIMIT=200
 ## slack API client settings 
 
-client = slack_client(token=MY_STEMBOT_TOKEN)
+client=""
+if USE_BOT_TOKEN : 
+
+    client = slack_client(token=SLACK_BOT_TOKEN)
+    print("SLACK_BOT_TOKEN=",SLACK_BOT_TOKEN)
+else:
+    
+    client = slack_client(token=SLACK_ADMIN_TOKEN)
+    print("SLACK_ADMIN_TOKEN=",SLACK_ADMIN_TOKEN)
 
 ## INPUT CSV FILE
 
 STUDENTS_CSV = "localfiles/dummy.csv"
 STUDENT_INVITE_LIST = "localfiles/student_invite_list.txt"
 STUDENT_READABLE_LIST = "localfiles/readable_student_invite_emails.txt"
+STUDENT_SLACK_LIST = "localfiles/new_student_list.csv"
+STUDENT_MENTOR_MATCH_LIST = "localfiles/mentor_match_channel.csv"
+
 ADMIN_USERIDS=[
     "U0136DUHHPG",
     "U013D76B97D", 
     "U0136AJ7Y86",
-    # "U013ALLGH8E", My userid
+    "U013ALLGH8E", 
     "U013D76B97D",
 ]
 

@@ -209,7 +209,11 @@ def db_create_report_num_messages():
     
     for user in distinct_users : 
         user_info = client.users_info(user=user).__dict__["data"]["user"]
-        payload={"user_id":user,"user_name":user_info["name"],"user_real_name":user_info["real_name"]}
+        payload={
+            "user_id":user,
+            "user_name":user_info["name"],
+            "user_real_name":user_info["real_name"]
+        }
         print(payload)
         member_table_raw.update({"_id.user_id":user},{"$set":payload},multi=True)
     

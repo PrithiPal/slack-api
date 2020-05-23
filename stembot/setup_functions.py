@@ -87,6 +87,37 @@ def create_student_invite_list() :
     print("Readable output to {}".format(STUDENT_READABLE_LIST))
 
 
+def prepare_slack_student_data() : 
+
+    OVERALL=[]
+
+
+    for chan in PRIVATE_CHANNELS : 
+        PAYLOAD={}
+        print("{} -->  {}".format(chan['id'],chan['name']))
+
+        member_ids = hf.get_channel_members_ids(chan['id'],is_public='False')
+        member_info = [hf.get_member_info(x) for x in member_ids ]
+        #print(member_info)
+
+
+        for member in member_info : 
+            if member["user_id"] not in ADMIN_USERIDS : 
+                PAYLOAD={
+                    "name":member["real_name"],
+                    "team_id":member["team_id"],
+                    "email":member["email"],
+                    "team_channel":chan["name"],
+                    "team_channel_id":chan["id"]
+                }
+
+                OVERALL.append(PAYLOAD)
+
+    
+    df = pd.DataFrame(OVERALL)
+    df.to_csv(STUDENT_SLACK_LIST)
+
+
 
 ## AGGREGATE FUNCTIONS FOR WHOLE BDC WORKSPACE
 
@@ -123,7 +154,6 @@ def create_all_student_channels() :
             STUDENT_USER_IDS.append(user4)
 
     
-
         ## Assigns permissions to ADMINS
         
         assign_members(chan_id,STUDENT_USER_IDS)
@@ -137,6 +167,9 @@ def create_all_student_channels() :
 def delete_all_student_channels() : 
         
     pass 
+
+
+
 
 
 ## DB CREATION FUNCTIONS 
