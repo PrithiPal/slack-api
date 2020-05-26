@@ -198,10 +198,14 @@ class TestSlackFunctions(unittest.TestCase) :
     @measure_time
     def test_realtime_functions(self) : 
 
+        USER_ADD="U0140UPML3G"
         
+        for chan in PRIVATE_CHANNELS : 
 
-
-
+            chan_id = chan['id']
+            chan_name = chan['name']
+            print("{} {}".format(chan_id,chan_name))
+            sf.assign_members(chan_id,USER_ADD)
 
 def suite() :
     suite = unittest.TestSuite()
@@ -214,8 +218,6 @@ def suite() :
     #suite.addTest(TestSlackFunctions('test_channel_creation'))
     #suite.addTest(TestSlackFunctions('test_generate_team_name'))
     #suite.addTest(TestSlackFunctions('test_create_all_student_channels'))
-    
-    
     #suite.addTest(TestSlackFunctions('test_generate_team_name'))
     suite.addTest(TestSlackFunctions('test_realtime_functions'))
     return suite

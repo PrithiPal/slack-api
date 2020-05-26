@@ -47,12 +47,11 @@ def send_message_all_students_accounts() :
 
 def message_all_mentors(text_message) : 
     
-
-
     with open(STUDENT_MENTOR_MATCH_LIST) as mentor_file : 
     
         csv_reader = csv.reader(mentor_file,delimiter=",")
         line_count = 0 
+        
         for row in csv_reader : 
             
             
@@ -67,8 +66,8 @@ def message_all_mentors(text_message) :
                     
                     resp = client.conversations_open(users=userid)
                     ret = client.chat_postMessage(text=text_message,channel=resp['channel']['id'])
-                   
-
+                except Exception as e :
+                    print("Exception {}",e)
             line_count += 1
 
 
@@ -183,7 +182,6 @@ def assign_mentors_to_channels() :
                 except Exception as e :
                     print("Error : {}".format(e))
 
-                
 
             line_count += 1
  
