@@ -9,9 +9,9 @@ from typing import Dict, List
 from slack import WebClient as slack_client
 
 from parameters import *
-from setup_functions import *
-from db_functions import * 
-from realtime import * 
+#from setup_functions import *
+from db_functions import db_cache_create
+#from realtime import *
 
 import time 
 
@@ -22,12 +22,12 @@ def main():
     ## DB FUNCTIONS 
 
 
-    #db_cache_create()
+    db_cache_create()
     
-    time.sleep(2)
+    #time.sleep(2)
     
     #db_create_report_num_messages()
-    db_students_table_raw()
+    #db_students_table_raw()
 
 
     ## WORKSPACE CREATION 
